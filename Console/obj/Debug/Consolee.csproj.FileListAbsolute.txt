@@ -1,0 +1,11 @@
+E:\Projekte\AzureTesting\Console\bin\Debug\Console.exe.config
+E:\Projekte\AzureTesting\Console\bin\Debug\Console.exe
+E:\Projekte\AzureTesting\Console\bin\Debug\Console.pdb
+E:\Projekte\AzureTesting\Console\obj\Debug\Consolee.csproj.CoreCompileInputs.cache
+E:\Projekte\AzureTesting\Console\obj\Debug\Console.exe
+E:\Projekte\AzureTesting\Console\obj\Debug\Console.pdb
+E:\Projekte\AzureTesting\Console\obj\Debug\Consolee.csprojResolveAssemblyReference.cache
+E:\Projekte\AzureTesting\Console\bin\Debug\Common.exe
+E:\Projekte\AzureTesting\Console\bin\Debug\Common.pdb
+E:\Projekte\AzureTesting\Console\bin\Debug\Common.exe.config
+E:\Projekte\AzureTesting\Console\obj\Debug\Consolee.csproj.CopyComplete

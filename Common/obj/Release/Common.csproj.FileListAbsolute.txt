@@ -1,0 +1,7 @@
+E:\Projekte\AzureTesting\Common\bin\Release\Common.exe.config
+E:\Projekte\AzureTesting\Common\bin\Release\Common.exe
+E:\Projekte\AzureTesting\Common\bin\Release\Common.pdb
+E:\Projekte\AzureTesting\Common\obj\Release\Common.csprojResolveAssemblyReference.cache
+E:\Projekte\AzureTesting\Common\obj\Release\Common.csproj.CoreCompileInputs.cache
+E:\Projekte\AzureTesting\Common\obj\Release\Common.exe
+E:\Projekte\AzureTesting\Common\obj\Release\Common.pdb
