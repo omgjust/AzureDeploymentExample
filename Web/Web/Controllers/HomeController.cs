@@ -16,14 +16,14 @@ namespace Web.Controllers
 
         public ActionResult About()
         {
-            ViewBag.Message = Commons.s1;
+            ViewBag.Message = Commons.s1 + "2";
 
             return View();
         }
 
         public ActionResult Contact()
         {
-            ViewBag.Message = Commons.s1;
+            ViewBag.Message = Commons.s1 + "2";
 
             return View();
         }
