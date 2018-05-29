@@ -2,7 +2,7 @@
 
 :: ----------------------
 :: KUDU Deployment Script
-:: Version: 1.0.15
+:: Version: 1.0.17
 :: ----------------------
 
 :: Prerequisites
@@ -47,35 +47,52 @@ IF NOT DEFINED KUDU_SYNC_CMD (
   :: Locally just running "kuduSync" would also work
   SET KUDU_SYNC_CMD=%appdata%\npm\kuduSync.cmd
 )
+IF NOT DEFINED DEPLOYMENT_TEMP (
+  SET DEPLOYMENT_TEMP=%temp%\___deployTemp%random%
+  SET CLEAN_LOCAL_DEPLOYMENT_TEMP=true
+)
+
+IF DEFINED CLEAN_LOCAL_DEPLOYMENT_TEMP (
+  IF EXIST "%DEPLOYMENT_TEMP%" rd /s /q "%DEPLOYMENT_TEMP%"
+  mkdir "%DEPLOYMENT_TEMP%"
+)
+
+IF DEFINED MSBUILD_PATH goto MsbuildPathDefined
+SET MSBUILD_PATH=%ProgramFiles(x86)%\MSBuild\14.0\Bin\MSBuild.exe
+:MsbuildPathDefined
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Deployment
 :: ----------
-echo Handling function App deployment with Custom script.
 
-:: 1. Restore nuget packages
-call :ExecuteCmd nuget.exe restore "%DEPLOYMENT_SOURCE%\Web\Web.sln" -MSBuildPath "%MSBUILD_15_DIR%"  
-IF !ERRORLEVEL! NEQ 0 goto error
+echo Handling .NET Web Application deployment.
 
-:: 2. Build and publish
-echo starting build
-call :ExecuteCmd "%MSBUILD_15_DIR%\MSBuild.exe" "%DEPLOYMENT_SOURCE%\Web\Web.sln" /p:DeployOnBuild=true /p:configuration=Release /p:publishurl="%DEPLOYMENT_TEMP%" %SCM_BUILD_ARGS%  
-IF !ERRORLEVEL! NEQ 0 goto error
-echo end build
-
-:: 3. KuduSync
-echo starting kudusync
-IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
-  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"  
+:: 1. Restore NuGet packages
+IF /I "Web\Web.sln" NEQ "" (
+  call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\Web\Web.sln" -MSBuildPath "%MSBUILD_15_DIR%"
   IF !ERRORLEVEL! NEQ 0 goto error
 )
-echo end kudusync
+
+:: 2. Build to the temporary path
+IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
+  call :ExecuteCmd "%MSBUILD_15_DIR%\MSBuild.exe" "%DEPLOYMENT_SOURCE%\Web\Web\Web.csproj" /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="%DEPLOYMENT_TEMP%";AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\Web\\" %SCM_BUILD_ARGS%
+) ELSE (
+  call :ExecuteCmd "%MSBUILD_15_DIR%\MSBuild.exe" "%DEPLOYMENT_SOURCE%\Web\Web\Web.csproj" /nologo /verbosity:m /t:Build /p:AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir="%DEPLOYMENT_SOURCE%\Web\\" %SCM_BUILD_ARGS%
+)
+
+IF !ERRORLEVEL! NEQ 0 goto error
+
+:: 3. KuduSync
+IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
+  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_TEMP%" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd"
+  IF !ERRORLEVEL! NEQ 0 goto error
+)
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 goto end
 
 :: Execute command routine that will echo out when error
-:ExecuteCmd 
+:ExecuteCmd
 setlocal
 set _CMD_=%*
 call %_CMD_%
@@ -85,15 +102,15 @@ exit /b %ERRORLEVEL%
 :error
 endlocal
 echo An error has occurred during web site deployment.
-call :exitSetErrorLevel 
-call :exitFromFunction 2>nul 
+call :exitSetErrorLevel
+call :exitFromFunction 2>nul
 
-:exitSetErrorLevel 
+:exitSetErrorLevel
 exit /b 1
 
-:exitFromFunction 
+:exitFromFunction
 ()
 
-:end 
+:end
 endlocal
 echo Finished successfully.
